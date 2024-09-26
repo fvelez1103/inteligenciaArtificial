@@ -99,6 +99,97 @@
         </p>
     </div>
 
+    <br>
+    <div>
+        <style>
+            table {
+              font-family: arial, sans-serif;
+              border-collapse: collapse;
+              width: 100%;
+            }
+            
+            td, th {
+              border: 1px solid #dddddd;
+              text-align: left;
+              padding: 8px;
+            }
+            
+            tr:nth-child(even) {
+              background-color: #dddddd;
+            }
+            </style>
+        <h1>Primer Parcial IA 26/09/2024</h1>
+        <h3>Punto 3: Tabla comparativa del uso de DFS y BFS para resolver los laberintos</h3>
+        <table>
+            <tr>
+              <th>Algoritmos</th>
+              <th>DFS</th>
+              <th>BFS</th>
+            </tr>
+            <tr>
+              <td>Método usado</td>
+              <td>StackFrontier()</td>
+              <td>QueueFrontier()</td>
+            </tr>
+            <tr>
+              <td>Nodos explorados laberinto 1</td>
+              <td>265</td>
+              <td>319</td>
+            </tr>
+            <tr>
+              <td>Nodos explorados laberinto 2</td>
+              <td>227</td>
+              <td>331</td>
+            </tr>
+          </table>
+    </div>
+
+    <br>
+    <h3>Punto 4: Código comentado explicando cada línea</h3>
+   <pre>
+     <code>
+       # -*- coding: utf-8 -*-
+       """Tu primera red neuronal en Python y Tensorflow"""
+ 
+       import tensorflow as tf - Importa la biblioteca TensorFlow y la asigna a la variable tf.
+       import numpy as np - Importa la biblioteca NumPy y la asigna a la variable np.
+ 
+       celsius = np.array([-40, -10, 0, 8, 15, 22, 38], dtype=float) - Crea un arreglo NumPy con los valores de temperatura en Celsius y lo asigna a la variable celsius. El parámetro dtype=float especifica que los valores sean de tipo flotante.
+       fahrenheit = np.array([-40, 14, 32, 46, 59, 72, 100], dtype=float) - Crea un arreglo NumPy con los valores de temperatura en Fahrenheit y lo asigna a la variable fahrenheit.
+ 
+       #capa = tf.keras.layers.Dense(units=1, input_shape=[1])
+       #modelo = tf.keras.Sequential([capa])
+ 
+       oculta1 = tf.keras.layers.Dense(units=3, input_shape=[1]) - Crea una capa densa (completamente conectada) con 3 neuronas y la asigna a la variable oculta1. El parámetro input_shape=[1] especifica que la capa tenga una entrada de tamaño 1.
+       oculta2 = tf.keras.layers.Dense(units=3) - Crea otra capa densa con 3 neuronas y la asigna a la variable oculta2.
+       salida = tf.keras.layers.Dense(units=1) - Crea una capa densa con 1 neurona y la asigna a la variable salida.
+       modelo = tf.keras.Sequential([oculta1, oculta2, salida]) - Crea un modelo secuencial que combina las capas oculta1, oculta2 y salida.
+ 
+       modelo.compile(
+           optimizer=tf.keras.optimizers.Adam(0.1),
+           loss='mean_squared_error' - Compila el modelo con el optimizador Adam y la función de pérdida de error cuadrático medio. El parámetro 0.1 especifica la tasa de aprendizaje.
+       )
+ 
+       print("Comenzando entrenamiento...") - Imprime un mensaje indicando que el entrenamiento ha comenzado.
+       historial = modelo.fit(celsius, fahrenheit, epochs=1000, verbose=False) - Entrena el modelo con los datos de temperatura en Celsius y Fahrenheit durante 1000 épocas. El parámetro verbose=False especifica que no se muestren mensajes de progreso.
+       print("Modelo entrenado!") - Imprime un mensaje indicando que el entrenamiento ha terminado.
+ 
+       import matplotlib.pyplot as plt - Importa la biblioteca Matplotlib para visualizar la pérdida.
+       plt.xlabel("# Epoca") - Importa la biblioteca Matplotlib para visualizar la pérdida.
+       plt.ylabel("Magnitud de pérdida") - Establece el título del eje y como "Magnitud de pérdida".
+       plt.plot(historial.history["loss"]) - Plotea la pérdida durante el entrenamiento.
+ 
+       print("Hagamos una predicción!") - Imprime un mensaje indicando que se hará una predicción.
+       resultado = modelo.predict([100.0]) - Hace una predicción con una temperatura de 100 grados Celsius.
+       print("El resultado es " + str(resultado) + " fahrenheit!") - Imprime el resultado de la predicción.
+ 
+       print("Variables internas del modelo") - Imprime un mensaje indicando que se visualizarán las variables internas del modelo.
+       #print(capa.get_weights())
+       print(oculta1.get_weights()) - Imprime los pesos de la capa oculta1.
+       print(oculta2.get_weights()) - Imprime los pesos de la capa oculta2.
+       print(salida.get_weights()) - Imprime los pesos de la capa salida.
+     </code>
+   </pre>
 
 </body>
 
