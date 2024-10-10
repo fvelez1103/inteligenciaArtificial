@@ -1,15 +1,13 @@
 import sys
 
 class Node():
-    def __init__(self, state, parent, action):
-        self.state = state
-        self.parent = parent
+    def init(self, state, parent, action): 
+        self.state = state 
+        self.parent = parent 
         self.action = action
 
-
-class StackFrontier():
-    def __init__(self):
-        self.frontier = []
+class StackFrontier(): 
+    def init(self): self.frontier = []
 
     def add(self, node):
         self.frontier.append(node)
@@ -27,9 +25,27 @@ class StackFrontier():
             node = self.frontier[-1]
             self.frontier = self.frontier[:-1]
             return node
-
-
+        
 class QueueFrontier(StackFrontier):
+    def remove(self):
+        if self.empty():
+            raise Exception("empty frontier")
+        else:
+            node = self.frontier[0]
+            self.frontier = self.frontier[1:]
+            return node
+        
+class AStarFrontier():
+    def init(self): self.frontier = []
+
+    def add(self, node):
+        self.frontier.append(node)
+
+    def contains_state(self, state):
+        return any(node.state == state for node in self.frontier)
+
+    def empty(self):
+        return len(self.frontier) == 0
 
     def remove(self):
         if self.empty():
@@ -38,9 +54,8 @@ class QueueFrontier(StackFrontier):
             node = self.frontier[0]
             self.frontier = self.frontier[1:]
             return node
-
+        
 class Maze():
-
     def __init__(self, filename):
 
         # Read file and set height and width of maze
@@ -116,15 +131,21 @@ class Maze():
         return result
 
 
-    def solve(self):
-        """Finds a solution to maze, if one exists."""
+    def solve(self, algorithm):
+        if algorithm == "DFS":
+            frontier = StackFrontier()
+        elif algorithm == "BFS":
+            frontier = QueueFrontier()
+        elif algorithm == "A*":
+            frontier = AStarFrontier()
+        else:
+            raise Exception("Invalid algorithm")
 
         # Keep track of number of states explored
         self.num_explored = 0
 
         # Initialize frontier to just the starting position
         start = Node(state=self.start, parent=None, action=None)
-        frontier = QueueFrontier()
         frontier.add(start)
 
         # Initialize an empty explored set
@@ -133,7 +154,7 @@ class Maze():
         # Keep looping until solution found
         while True:
 
-            # If nothing left in frontier, then no path
+                        # If nothing left in frontier, then no path
             if frontier.empty():
                 raise Exception("no solution")
 
@@ -208,22 +229,40 @@ class Maze():
                 # Draw cell
                 draw.rectangle(
                     ([(j * cell_size + cell_border, i * cell_size + cell_border),
-                      ((j + 1) * cell_size - cell_border, (i + 1) * cell_size - cell_border)]),
+                    ((j + 1) * cell_size - cell_border, (i + 1) * cell_size - cell_border)]),
                     fill=fill
                 )
 
         img.save(filename)
 
+    def main():
+        if len(sys.argv) != 2:
+            sys.exit("Usage: python maze.py maze.txt")
+        m = Maze(sys.argv[1])
+        print("Maze:")
+        m.print()
 
-if len(sys.argv) != 2:
-    sys.exit("Usage: python maze.py maze.txt")
+        print("Seleccione un algoritmo:")
+        print("1. DFS")
+        print("2. BFS")
+        print("3. A*")
 
-m = Maze(sys.argv[1])
-print("Maze:")
-m.print()
-print("Solving...")
-m.solve()
-print("States Explored:", m.num_explored)
-print("Solution:")
-m.print()
-m.output_image("maze.png", show_explored=True)
+        choice = input("Ingrese su elección: ")
+
+        if choice == "1":
+            m.solve("DFS")
+        elif choice == "2":
+            m.solve("BFS")
+        elif choice == "3":
+            m.solve("A*")
+        else:
+            print("Elección inválida")
+
+        print("States Explored:", m.num_explored)
+        print("Solution:")
+        m.print()
+        m.output_image("maze.png", show_explored=True)
+
+    # Llamada a la función main si el archivo se ejecuta directamente
+    if __name__ == "__main__":
+        main()
