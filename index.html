@@ -666,7 +666,32 @@ def model_check(knowledge, query):
     return check_all(knowledge, query, symbols, dict())
     </code>
 </pre>
+<br>
+<div>
+    <pre>
+        <code>
+            from logic import *  # Importa todas las clases y funciones definidas en el módulo logic.
 
+# Definición de símbolos lógicos.
+lluvia = Symbol("lluvia")  # Crea un símbolo que representa "lluvia".
+bbc = Symbol("bbc")        # Crea un símbolo que representa "bbc".
+Unimayor = Symbol("Unimayor")  # Crea un símbolo que representa "Unimayor".
+
+# Definición del conocimiento lógico utilizando conjunciones y disyunciones.
+knowledge = And(
+    Implication(Not(lluvia), bbc),  # Si no hay lluvia, entonces hay bbc.
+    Or(bbc, Unimayor),               # Hay bbc o hay Unimayor (o ambos).
+    Not(And(bbc, Unimayor)),         # No puede ser que haya bbc y Unimayor al mismo tiempo.
+    Unimayor                         # Hay Unimayor.
+)
+
+# Verifica si el conocimiento implica que hay lluvia.
+print(model_check(knowledge, lluvia))  # Llama a la función model_check para evaluar si el conocimiento implica la proposición "lluvia".
+        </code>
+    </pre>
+</div>
+
+            
 </body>
 
 </html>
