@@ -345,6 +345,327 @@ def juego():
 juego()
         </code>
     </pre>
+<br>
+<br>
+<div>
+    <h2>Parcial 2 IA 24/10/2024</h2>
+    <h3>Punto 5: Comentar código logic.py</h3>
+</div>
+<pre>
+    <code>
+        import itertools  # Importa la biblioteca itertools, aunque no se utiliza en este código.
+
+class Sentence():
+    """Clase base para representar oraciones lógicas."""
+
+    def evaluate(self, model):
+        """Evalúa la oración lógica."""
+        raise Exception("nothing to evaluate")  # Lanza una excepción si se llama a este método sin implementación.
+
+    def formula(self):
+        """Devuelve la fórmula en forma de cadena que representa la oración lógica."""
+        return ""
+
+    def symbols(self):
+        """Devuelve un conjunto de todos los símbolos en la oración lógica."""
+        return set()
+
+    @classmethod
+    def validate(cls, sentence):
+        """Valida que la oración sea una instancia de la clase Sentence."""
+        if not isinstance(sentence, Sentence):
+            raise TypeError("must be a logical sentence")  # Lanza un error si no es una oración lógica.
+
+    @classmethod
+    def parenthesize(cls, s):
+        """Agrega paréntesis a una expresión si no está ya entre paréntesis."""
+        def balanced(s):
+            """Verifica si una cadena tiene paréntesis balanceados."""
+            count = 0  # Contador para paréntesis.
+            for c in s:
+                if c == "(":
+                    count += 1  # Incrementa el contador al encontrar un '('.
+                elif c == ")":
+                    if count <= 0:
+                        return False  # Retorna False si hay un ')' sin un '(' correspondiente.
+                    count -= 1  # Decrementa el contador al encontrar un ')'.
+            return count == 0  # Retorna True si todos los paréntesis están balanceados.
+
+        # Verifica si la cadena ya está balanceada o es una sola letra.
+        if not len(s) or s.isalpha() or (
+            s[0] == "(" and s[-1] == ")" and balanced(s[1:-1])
+        ):
+            return s  # Retorna la cadena tal como está.
+        else:
+            return f"({s})"  # Agrega paréntesis a la cadena.
+
+class Symbol(Sentence):
+    """Clase para representar un símbolo en la lógica."""
+
+    def __init__(self, name):
+        self.name = name  # Inicializa el símbolo con su nombre.
+
+    def __eq__(self, other):
+        """Verifica si dos símbolos son iguales."""
+        return isinstance(other, Symbol) and self.name == other.name
+
+    def __hash__(self):
+        """Devuelve un hash del símbolo para su uso en conjuntos y diccionarios."""
+        return hash(("symbol", self.name))
+
+    def __repr__(self):
+        """Representación en cadena del símbolo."""
+        return self.name
+
+    def evaluate(self, model):
+        """Evalúa el símbolo en un modelo dado."""
+        try:
+            return bool(model[self.name])  # Retorna el valor booleano del modelo.
+        except KeyError:
+            raise EvaluationException(f"variable {self.name} not in model")  # Lanza una excepción si el símbolo no está en el modelo.
+
+    def formula(self):
+        """Devuelve la fórmula del símbolo."""
+        return self.name
+
+    def symbols(self):
+        """Devuelve un conjunto con el símbolo."""
+        return {self.name}
+
+
+class Not(Sentence):
+    """Clase para representar la negación de una oración."""
+
+    def __init__(self, operand):
+        Sentence.validate(operand)  # Valida el operando.
+        self.operand = operand  # Inicializa con el operando.
+
+    def __eq__(self, other):
+        """Verifica si dos negaciones son iguales."""
+        return isinstance(other, Not) and self.operand == other.operand
+
+    def __hash__(self):
+        """Devuelve un hash de la negación."""
+        return hash(("not", hash(self.operand)))
+
+    def __repr__(self):
+        """Representación en cadena de la negación."""
+        return f"Not({self.operand})"
+
+    def evaluate(self, model):
+        """Evalúa la negación en un modelo dado."""
+        return not self.operand.evaluate(model)  # Retorna la negación del resultado del operando.
+
+    def formula(self):
+        """Devuelve la fórmula de la negación."""
+        return "¬" + Sentence.parenthesize(self.operand.formula())  # Usa el símbolo de negación.
+
+    def symbols(self):
+        """Devuelve los símbolos del operando."""
+        return self.operand.symbols()
+
+
+class And(Sentence):
+    """Clase para representar la conjunción de oraciones."""
+
+    def __init__(self, *conjuncts):
+        for conjunct in conjuncts:
+            Sentence.validate(conjunct)  # Valida cada uno de los conjunctos.
+        self.conjuncts = list(conjuncts)  # Inicializa la lista de conjunctos.
+
+    def __eq__(self, other):
+        """Verifica si dos conjunciones son iguales."""
+        return isinstance(other, And) and self.conjuncts == other.conjuncts
+
+    def __hash__(self):
+        """Devuelve un hash de la conjunción."""
+        return hash(
+            ("and", tuple(hash(conjunct) for conjunct in self.conjuncts))
+        )
+
+    def __repr__(self):
+        """Representación en cadena de la conjunción."""
+        conjunctions = ", ".join([str(conjunct) for conjunct in self.conjuncts])
+        return f"And({conjunctions})"
+
+    def add(self, conjunct):
+        """Agrega un nuevo conjuncto a la lista."""
+        Sentence.validate(conjunct)
+        self.conjuncts.append(conjunct)
+
+    def evaluate(self, model):
+        """Evalúa la conjunción en un modelo dado."""
+        return all(conjunct.evaluate(model) for conjunct in self.conjuncts)  # Retorna True si todos los conjunctos son True.
+
+    def formula(self):
+        """Devuelve la fórmula de la conjunción."""
+        if len(self.conjuncts) == 1:
+            return self.conjuncts[0].formula()
+        return " ∧ ".join([Sentence.parenthesize(conjunct.formula())
+                           for conjunct in self.conjuncts])  # Usa el símbolo de conjunción.
+
+    def symbols(self):
+        """Devuelve los símbolos de todos los conjunctos."""
+        return set.union(*[conjunct.symbols() for conjunct in self.conjuncts])
+
+
+class Or(Sentence):
+    """Clase para representar la disyunción de oraciones."""
+
+    def __init__(self, *disjuncts):
+        for disjunct in disjuncts:
+            Sentence.validate(disjunct)  # Valida cada uno de los disyunctos.
+        self.disjuncts = list(disjuncts)  # Inicializa la lista de disyunctos.
+
+    def __eq__(self, other):
+        """Verifica si dos disyunciones son iguales."""
+        return isinstance(other, Or) and self.disjuncts == other.disjuncts
+
+    def __hash__(self):
+        """Devuelve un hash de la disyunción."""
+        return hash(
+            ("or", tuple(hash(disjunct) for disjunct in self.disjuncts))
+        )
+
+    def __repr__(self):
+        """Representación en cadena de la disyunción."""
+        disjuncts = ", ".join([str(disjunct) for disjunct in self.disjuncts])
+        return f"Or({disjuncts})"
+
+    def evaluate(self, model):
+        """Evalúa la disyunción en un modelo dado."""
+        return any(disjunct.evaluate(model) for disjunct in self.disjuncts)  # Retorna True si alguno de los disyunctos es True.
+
+    def formula(self):
+        """Devuelve la fórmula de la disyunción."""
+        if len(self.disjuncts) == 1:
+            return self.disjuncts[0].formula()
+        return " ∨  ".join([Sentence.parenthesize(disjunct.formula())
+                            for disjunct in self.disjuncts])  # Usa el símbolo de disyunción.
+
+    def symbols(self):
+        """Devuelve los símbolos de todos los disyunctos."""
+        return set.union(*[disjunct.symbols() for disjunct in self.disjuncts])
+
+
+class Implication(Sentence):
+    """Clase para representar la implicación de oraciones."""
+
+    def __init__(self, antecedent, consequent):
+        Sentence.validate(antecedent)  # Valida el antecedente.
+        Sentence.validate(consequent)  # Valida el consecuente.
+        self.antecedent = antecedent  # Inicializa con el antecedente.
+        self.consequent = consequent  # Inicializa con el consecuente.
+
+    def __eq__(self, other):
+        """Verifica si dos implicaciones son iguales."""
+        return (isinstance(other, Implication)
+                and self.antecedent == other.antecedent
+                and self.consequent == other.consequent)
+
+    def __hash__(self):
+        """Devuelve un hash de la implicación."""
+        return hash(("implies", hash(self.antecedent), hash(self.consequent)))
+
+    def __repr__(self):
+        """Representación en cadena de la implicación."""
+        return f"Implication({self.antecedent}, {self.consequent})"
+
+    def evaluate(self, model):
+        """Evalúa la implicación en un modelo dado."""
+        return ((not self.antecedent.evaluate(model))
+                or self.consequent.evaluate(model))  # Retorna True si el antecedente es False o el consecuente es True.
+
+    def formula(self):
+        """Devuelve la fórmula de la implicación."""
+        antecedent = Sentence.parenthesize(self.antecedent.formula())
+        consequent = Sentence.parenthesize(self.consequent.formula())
+        return f"{antecedent} => {consequent}"  # Usa el símbolo de implicación.
+
+    def symbols(self):
+        """Devuelve los símbolos del antecedente y el consecuente."""
+        return set.union(self.antecedent.symbols(), self.consequent.symbols())
+
+
+class Biconditional(Sentence):
+    """Clase para representar la bicondicional de oraciones."""
+
+    def __init__(self, left, right):
+        Sentence.validate(left)  # Valida la parte izquierda.
+        Sentence.validate(right)  # Valida la parte derecha.
+        self.left = left  # Inicializa con la parte izquierda.
+        self.right = right  # Inicializa con la parte derecha.
+
+    def __eq__(self, other):
+        """Verifica si dos bicondicionales son iguales."""
+        return (isinstance(other, Biconditional)
+                and self.left == other.left
+                and self.right == other.right)
+
+    def __hash__(self):
+        """Devuelve un hash de la bicondicional."""
+        return hash(("biconditional", hash(self.left), hash(self.right)))
+
+    def __repr__(self):
+        """Representación en cadena de la bicondicional."""
+        return f"Biconditional({self.left}, {self.right})"
+
+    def evaluate(self, model):
+        """Evalúa la bicondicional en un modelo dado."""
+        return ((self.left.evaluate(model)
+                 and self.right.evaluate(model))
+                or (not self.left.evaluate(model)
+                    and not self.right.evaluate(model)))  # Retorna True si ambas partes son True o ambas son False.
+
+    def formula(self):
+        """Devuelve la fórmula de la bicondicional."""
+        left = Sentence.parenthesize(str(self.left))
+        right = Sentence.parenthesize(str(self.right))
+        return f"{left} <=> {right}"  # Usa el símbolo de bicondicional.
+
+    def symbols(self):
+        """Devuelve los símbolos de ambas partes."""
+        return set.union(self.left.symbols(), self.right.symbols())
+
+
+def model_check(knowledge, query):
+    """Verifica si el conocimiento implica la consulta."""
+
+    def check_all(knowledge, query, symbols, model):
+        """Verifica si el conocimiento implica la consulta en un modelo dado."""
+
+        # Si el modelo tiene una asignación para cada símbolo
+        if not symbols:
+
+            # Si el conocimiento es True en el modelo, entonces la consulta debe ser True también
+            if knowledge.evaluate(model):
+                return query.evaluate(model)
+            return True
+        else:
+
+            # Selecciona uno de los símbolos restantes
+            remaining = symbols.copy()
+            p = remaining.pop()
+
+            # Crea un modelo donde el símbolo es True
+            model_true = model.copy()
+            model_true[p] = True
+
+            # Crea un modelo donde el símbolo es False
+            model_false = model.copy()
+            model_false[p] = False
+
+            # Verifica que la implicación se cumpla en ambos modelos
+            return (check_all(knowledge, query, remaining, model_true) and
+                    check_all(knowledge, query, remaining, model_false))
+
+    # Obtiene todos los símbolos en ambos conocimiento y consulta
+    symbols = set.union(knowledge.symbols(), query.symbols())
+
+    # Verifica que el conocimiento implique la consulta
+    return check_all(knowledge, query, symbols, dict())
+    </code>
+</pre>
 
 </body>
 
