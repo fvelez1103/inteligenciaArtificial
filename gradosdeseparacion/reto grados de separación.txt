@@ -1,0 +1,41 @@
+Antecedentes
+Según el juego de los Seis Grados de Kevin Bacon, cualquier persona de la industria cinematográfica de Hollywood puede estar relacionada con Kevin Bacon en seis pasos, en los que cada paso consiste en encontrar una película que ambos actores hayan protagonizado.
+
+En este problema, nos interesa encontrar el camino más corto entre dos actores cualesquiera eligiendo una secuencia de películas que los conecten. Por ejemplo, el camino más corto entre Jennifer Lawrence y Tom Hanks es 2: Jennifer Lawrence está conectada con Kevin Bacon por haber protagonizado ambos «X-Men: First Class», y Kevin Bacon está conectado con Tom Hanks por haber protagonizado ambos «Apollo 13».
+
+Podemos plantear esto como un problema de búsqueda: nuestros estados son personas. Nuestras acciones son películas, que nos llevan de un actor a otro (es cierto que una película podría llevarnos a varios actores diferentes, pero eso está bien para este problema). Nuestro estado inicial y nuestro estado objetivo están definidos por las dos personas que intentamos conectar. Utilizando la búsqueda breadth-first, podemos encontrar el camino más corto de un actor a otro.
+
+Entendiendo
+El código de distribución contiene dos conjuntos de archivos de datos CSV: uno en el directorio grande y otro en el directorio pequeño. Cada uno contiene archivos con los mismos nombres y la misma estructura, pero el pequeño es un conjunto de datos mucho más pequeño para facilitar las pruebas y la experimentación.
+
+Cada conjunto de datos consta de tres archivos CSV. Un archivo CSV, si no está familiarizado, es sólo una forma de organizar los datos en un formato basado en texto: cada fila corresponde a una entrada de datos, con comas en la fila que separan los valores de esa entrada.
+
+Abra el archivo small/people.csv. Verás que cada persona tiene un identificador único, que se corresponde con su identificador en la base de datos de IMDb. También tienen un nombre y un año de nacimiento.
+
+A continuación, abre small/movies.csv. Verás que cada película también tiene un identificador único, además de un título y el año de estreno.
+
+Ahora, abre small/stars.csv. Este archivo establece una relación entre las personas de people.csv y las películas de movies.csv. Cada fila es un par de valores person_id y movie_id. La primera fila (ignorando la cabecera), por ejemplo, indica que la persona con id 102 protagonizó la película con id 104257. Si lo compruebas con people.csv y movies.csv, verás que esta fila dice que Kevin Bacon protagonizó la película «A Few Good Men».
+
+A continuación, echa un vistazo a grados.py. En la parte superior, se definen varias estructuras de datos para almacenar la información de los archivos CSV. El diccionario de nombres es una forma de buscar a una persona por su nombre: asigna nombres a un conjunto de ids correspondientes (porque es posible que varios actores tengan el mismo nombre). El diccionario de personas asigna el id de cada persona a otro diccionario con valores para el nombre de la persona, el año de nacimiento y el conjunto de todas las películas que ha protagonizado. Y el diccionario de películas asigna el id de cada película a otro diccionario con valores para el título de esa película, el año de estreno y el conjunto de todas las estrellas de la película. La función cargar_datos carga los datos de los archivos CSV en estas estructuras de datos.
+
+La función principal de este programa carga primero los datos en la memoria (el directorio desde el que se cargan los datos puede especificarse mediante un argumento de la línea de comandos). A continuación, la función pide al usuario que introduzca dos nombres. La función person_id_for_name recupera el id de cualquier persona (y se encarga de pedir al usuario que lo aclare, en caso de que varias personas tengan el mismo nombre). La función llama entonces a la función camino_más_corto para calcular el camino más corto entre las dos personas, e imprime el camino.
+
+Sin embargo, la función camino_más_corto no está implementada. Ahí es donde entras tú.
+
+Especificación
+Complete la implementación de la función camino_más_corto de forma que devuelva el camino más corto desde la persona con id origen hasta la persona con id destino.
+
+Suponiendo que existe un camino desde el origen hasta el destino, la función debe devolver una lista, donde cada elemento de la lista es el siguiente par (movie_id, person_id) en el camino desde el origen hasta el destino. Cada par debe ser una tupla de dos cadenas.
+Por ejemplo, si el valor de retorno de shortest_path fuera [(1, 2), (3, 4)], significaría que el origen protagonizó la película 1 con la persona 2, la persona 2 protagonizó la película 3 con la persona 4, y la persona 4 es el destino.
+Si hay varios caminos de longitud mínima desde el origen hasta el destino, la función puede devolver cualquiera de ellos.
+Si no hay ningún camino posible entre dos actores, su función debe devolver Ninguno.
+Puede llamar a la función vecinos_para_persona, que acepta el id de una persona como entrada, y devuelve un conjunto de pares (movie_id, person_id) para todas las personas que protagonizaron una película con una persona dada.
+No debería modificar nada más en el archivo que la función camino_más_corto, aunque puede escribir funciones adicionales y/o importar otros módulos de la biblioteca estándar de Python.
+
+Sugerencias
+Mientras que la implementación de la búsqueda en la clase comprueba si hay un objetivo cuando un nodo sale de la frontera, puedes mejorar la eficiencia de tu búsqueda comprobando si hay un objetivo a medida que se añaden nodos a la frontera: si detectas un nodo objetivo, no hace falta añadirlo a la frontera, simplemente puedes devolver la solución inmediatamente.
+Puedes tomar prestado y adaptar cualquier código de los ejemplos de la clase. Ya te hemos proporcionado un archivo util.py que contiene las implementaciones de la clase para Node, StackFrontier y QueueFrontier, que puedes utilizar (y modificar si quieres).
+Probando
+Si lo deseas, puedes ejecutar lo siguiente (después de configurar check50 en tu sistema) para evaluar la corrección de tu código. Esto no es obligatorio; puedes simplemente enviar siguiendo los pasos al final de esta especificación, y estas mismas pruebas se ejecutarán en nuestro servidor. En cualquier caso, ¡asegúrate de compilarlo y probarlo tú también!
+
+Recuerde que no puede importar ningún módulo (salvo los de la biblioteca estándar de Python) que no esté explícitamente autorizado en este documento. Hacerlo no sólo impedirá que se ejecute check50, sino que también impedirá que submit50 puntúe su tarea, ya que utiliza check50. Si esto ocurre, es probable que haya importado algo no permitido o modificado el código de distribución de forma no autorizada, según la especificación. Ciertamente hay herramientas por ahí que trivializan algunos de estos proyectos, pero ese no es el objetivo aquí; estás aprendiendo cosas a un nivel inferior. Si no decimos aquí que se pueden usar, no se pueden usar.
